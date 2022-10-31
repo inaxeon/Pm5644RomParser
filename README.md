@@ -46,5 +46,5 @@ The white bar on the left is the horizontal sync.
 
 The R-Y and B-Y components only contain half of the horizontal resolution of the luminance component and need to be stretched before composing the final image.
 
-The bars on the left are the colourburst.
+The long vertical bars on the far left are the colourburst.
 
