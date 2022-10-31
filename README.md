@@ -1,4 +1,4 @@
-# Philip PM5644 Pattern ROM parser / processor
+# Philips PM5644 Pattern ROM parser / processor
 
 This project parses the data from the EPROMs within a Philips PM5644 programmed with the 4:3 PAL circle pattern and turns it into a bitmap image for on-screen viewing.
 
@@ -19,3 +19,32 @@ The PM5644 effectively contains three monochrome bitmaps in its EPROMs.
 3) B-Y component
 
 This amounts to an image rougly in YCbCr format however the exact design parameters of the unit are not known thus there is quite a bit of guesswork in this project.
+
+The final result is the below however note that the understanding of how to decode the colours is presently in its infancy.
+
+![Composite image](https://github.com/inaxeon/Pm5644RomParser/blob/main/Pm5644RomParser/Samples/PM5644_Composite.png)
+
+Note that the circle is not a true circle. Unfortunately that's just the deal with these units. Analogue televisions do not have pixels but instead lines. Philips have only loaded as many samples as they felt were necessary to generate the pattern.
+
+There is no sense in stretching the image either as this will butcher it.
+
+There is a perculiar looking defect in the blue square in the circle. This comes from the R-Y samples and it is verified to be exactly as reproduced from the physical unit by the verification of checksums labelled on the physical chips.
+
+### Raw luminance component
+
+![Luminance](https://github.com/inaxeon/Pm5644RomParser/blob/main/Pm5644RomParser/Resources/PM5644_Luma_Original.png)
+
+The white bar on the left is the horizontal sync.
+
+### Raw R-Y component
+
+![R-Y](https://github.com/inaxeon/Pm5644RomParser/blob/main/Pm5644RomParser/Resources/PM5644_RminusY_Original.png)
+
+### Raw B-Y component
+
+![B-Y](https://github.com/inaxeon/Pm5644RomParser/blob/main/Pm5644RomParser/Resources/PM5644_BminusY_Original.png)
+
+The R-Y and B-Y components only contain half of the horizontal resolution of the luminance component and need to be stretched before composing the final image.
+
+The long vertical bars on the far left are the colourburst.
+
