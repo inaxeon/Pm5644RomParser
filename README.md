@@ -1,4 +1,4 @@
-# Philip PM5644 Pattern ROM parser / processor
+# Philips PM5644 Pattern ROM parser / processor
 
 This project parses the data from the EPROMs within a Philips PM5644 programmed with the 4:3 PAL circle pattern and turns it into a bitmap image for on-screen viewing.
 
