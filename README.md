@@ -28,4 +28,4 @@ Note that the circle is not a true circle. Unfortunately that's just the deal wi
 
 There is no sense in stretching the image either as this will butcher it.
 
-The is a perculiar looking defect in the blue square in the circle. This comes from the R-Y samples and it is verified to be exactly as reproduced from the physical unit by the verification of checksums labelled on the physical chips.
+There is a perculiar looking defect in the blue square in the circle. This comes from the R-Y samples and it is verified to be exactly as reproduced from the physical unit by the verification of checksums labelled on the physical chips.
