@@ -29,3 +29,16 @@ Note that the circle is not a true circle. Unfortunately that's just the deal wi
 There is no sense in stretching the image either as this will butcher it.
 
 There is a perculiar looking defect in the blue square in the circle. This comes from the R-Y samples and it is verified to be exactly as reproduced from the physical unit by the verification of checksums labelled on the physical chips.
+
+### Raw luminance component
+
+![Luminance](https://github.com/inaxeon/Pm5644RomParser/blob/main/Pm5644RomParser/Resources/PM5644_Luma_Original.png)
+
+### Raw R-Y component
+
+![R-Y](https://github.com/inaxeon/Pm5644RomParser/blob/main/Pm5644RomParser/Resources/PM5644_RminusY_Original.png)
+
+### Raw B-Y component
+
+![B-Y](https://github.com/inaxeon/Pm5644RomParser/blob/main/Pm5644RomParser/Resources/PM5644_BminusY_Original.png)
+
