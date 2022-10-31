@@ -23,3 +23,7 @@ This amounts to an image rougly in YCbCr format however the exact design paramet
 The final result is the below however note that the understanding of how to decode the colours is presently in its infancy.
 
 ![Composite image](https://github.com/inaxeon/Pm5644RomParser/blob/main/Pm5644RomParser/Samples/PM5644_Composite.png)
+
+Note that the circle is not a true circle. Unfortunately that's just the deal with these units. Analogue televisions do not have pixels but instead lines. Philips have only loaded as many samples as they felt were necessary to generate the pattern.
+
+There is no sense in stretching the image either as this will butcher it.
