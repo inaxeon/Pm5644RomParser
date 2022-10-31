@@ -34,6 +34,8 @@ There is a perculiar looking defect in the blue square in the circle. This comes
 
 ![Luminance](https://github.com/inaxeon/Pm5644RomParser/blob/main/Pm5644RomParser/Resources/PM5644_Luma_Original.png)
 
+The white bar on the left is the horizontal sync.
+
 ### Raw R-Y component
 
 ![R-Y](https://github.com/inaxeon/Pm5644RomParser/blob/main/Pm5644RomParser/Resources/PM5644_RminusY_Original.png)
@@ -43,4 +45,6 @@ There is a perculiar looking defect in the blue square in the circle. This comes
 ![B-Y](https://github.com/inaxeon/Pm5644RomParser/blob/main/Pm5644RomParser/Resources/PM5644_BminusY_Original.png)
 
 The R-Y and B-Y components only contain half of the horizontal resolution of the luminance component and need to be stretched before composing the final image.
+
+The bars on the left are the colourburst.
 
