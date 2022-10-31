@@ -197,7 +197,7 @@ namespace Pm5644RomParser
 
         /// <summary>
         /// A very rough, approximate attempt to decode the colours in the PM5644's EPROMs.
-        /// It gets a result that* looks* OK but ideally an actual expert in this area needs
+        /// It gets a result that *looks* OK but ideally an actual expert in this area needs
         /// to scrutinise this and fix it because frankly I have no idea what I'm doing.
         /// </summary>
         /// <param name="Y"></param>
@@ -222,7 +222,7 @@ namespace Pm5644RomParser
             // Standard YCbCr -> RGB conversion
             float r = Y + 1.402f * CrFactored;
             float g = Y - 0.344136f * CbFactored - 0.714136f * CrFactored;
-            float b = Y + 1.772f * CbFactored + CrFactored;
+            float b = Y + 1.772f * CbFactored;
 
             // Clip values that fall slightly out of range. This is bad but has to be done until
             // this conversion is properly understood
