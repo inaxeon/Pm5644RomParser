@@ -27,3 +27,5 @@ The final result is the below however note that the understanding of how to deco
 Note that the circle is not a true circle. Unfortunately that's just the deal with these units. Analogue televisions do not have pixels but instead lines. Philips have only loaded as many samples as they felt were necessary to generate the pattern.
 
 There is no sense in stretching the image either as this will butcher it.
+
+The is a perculiar looking defect in the blue square in the circle. This comes from the R-Y samples and it is verified to be exactly as reproduced from the physical unit by the verification of checksums labelled on the physical chips.
