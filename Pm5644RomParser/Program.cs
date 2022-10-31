@@ -215,15 +215,14 @@ namespace Pm5644RomParser
             CrFactored = -CrFactored;
 
             // fudge factor to accomodate for the present lack of pre-processing on the chroma bitmaps
+            // ideally these should be pre-processed so they can be converted without fiddling.
             CbFactored *= 1.45f;
             CrFactored *= 1.45f;
 
-            var yFactor = 1.0f;
-
             // Standard YCbCr -> RGB conversion
-            float r = yFactor * Y + 0f * CbFactored + 1.402f * CrFactored;
-            float g = yFactor * Y - 0.344136f * CbFactored - 0.714136f * CrFactored;
-            float b = yFactor * Y + 1.772f * CbFactored + 0 * CrFactored;
+            float r = Y + 1.402f * CrFactored;
+            float g = Y - 0.344136f * CbFactored - 0.714136f * CrFactored;
+            float b = Y + 1.772f * CbFactored + CrFactored;
 
             // Clip values that fall slightly out of range. This is bad but has to be done until
             // this conversion is properly understood
