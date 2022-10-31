@@ -85,7 +85,7 @@ namespace Pm5644RomParser
 
         /// <summary>
         /// Generate true bit-for-bit bitmap representations of what's in the EPROMs,
-        /// for interests stake, and as inputs for the next step.
+        /// for interests sake, and as inputs for the next step.
         /// </summary>
         static void ConvertEpromsToRawBitmaps()
         {
