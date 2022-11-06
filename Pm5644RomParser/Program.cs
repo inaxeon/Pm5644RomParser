@@ -71,13 +71,15 @@ namespace Pm5644RomParser
             // with the luma. Not presently sure why this is necessary.
             var lumaXOffset = -2;
 
-            var rYexpanded = new Bitmap(rYraw, new Size(rYraw.Width * 2, rYraw.Height));
+            var rySaturated = GenerateSaturatedChroma(rYraw, 65);
+            var rYexpanded = new Bitmap(rySaturated, new Size(rySaturated.Width * 2, rySaturated.Height));
             var ryCropped = rYexpanded.Clone(new Rectangle(144 + lumaXOffset, 41, 707, 575), rYraw.PixelFormat);
-            ryCropped.Save("PM5644_RminusY_Expanded.png", ImageFormat.Png);
+            ryCropped.Save("PM5644_RminusY_Inverted_Saturated_Expanded_Cropped.png", ImageFormat.Png);
 
-            var bYexpanded = new Bitmap(bYraw, new Size(bYraw.Width * 2, bYraw.Height));
+            var bySaturated = GenerateSaturatedChroma(bYraw, 46);
+            var bYexpanded = new Bitmap(bySaturated, new Size(bySaturated.Width * 2, bySaturated.Height));
             var bYcropped = bYexpanded.Clone(new Rectangle(144 + lumaXOffset, 41, 707, 575), bYraw.PixelFormat);
-            bYcropped.Save("PM5644_BminusY_Expanded.png", ImageFormat.Png);
+            bYcropped.Save("PM5644_BminusY_Inverted_Saturated_Expanded_Cropped.png", ImageFormat.Png);
 
             var composite = GenerateComposite(lumaCropped, ryCropped, bYcropped);
             composite.Save("PM5644_Composite.png", ImageFormat.Png);
@@ -89,7 +91,6 @@ namespace Pm5644RomParser
         /// </summary>
         static void ConvertEpromsToRawBitmaps()
         {
-
             var deviceData = LoadDeviceData();
             var bitmap = GenerateBitmap(deviceData, PatternType.Luma, false);
 
@@ -128,6 +129,21 @@ namespace Pm5644RomParser
                 for (int pixel = 0; pixel < unsaturated.Width; pixel++)
                 {
                     saturated.SetPixel(pixel, line, SaturateY(unsaturated.GetPixel(pixel, line).R));
+                }
+            }
+
+            return saturated;
+        }
+
+        static Bitmap GenerateSaturatedChroma(Bitmap unsaturated, int range)
+        {
+            var saturated = new Bitmap(unsaturated.Width, unsaturated.Height);
+
+            for (int line = 0; line < unsaturated.Height; line++)
+            {
+                for (int pixel = 0; pixel < unsaturated.Width; pixel++)
+                {
+                    saturated.SetPixel(pixel, line, SaturateChroma(unsaturated.GetPixel(pixel, line).R, range));
                 }
             }
 
@@ -173,26 +189,46 @@ namespace Pm5644RomParser
         /// </summary>
         /// <param name="lum"></param>
         /// <returns></returns>
-        static Color SaturateY(int lum)
+        static Color SaturateY(int romData)
         {
-            int luma = 256 - lum;
+            //Data is found in a range between 41 and 181
+            float adjusted = romData - 41; // Now 0-140
+            adjusted = 140 - adjusted; // Invert
 
-            luma -= 75;
+            // We want 16-235 (with footroom/headroom) 0-219 adjusted
+            // 219/140 = 1.564;
 
-            int max = 140;
+            adjusted *= 1.57f;
+            adjusted += 16;
 
-            if (luma > max)
-                luma = (byte)max;
+            if ((int)adjusted > 235)
+                throw new InvalidDataException(); // Overflow.
 
-            if (luma < 0)
-                luma = 0;
+            return Color.FromArgb((byte)adjusted, (byte)adjusted, (byte)adjusted);
+        }
 
-            int color = (256 * luma) / max;
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="romData">The actual data from the ROM</param>
+        /// <param name="range">The amount (decimal) that chrominance data is observed to deviate from 128 (0 degrees) in ROM</param>
+        /// <returns></returns>
+        static Color SaturateChroma(int romData, int range)
+        {
+            float adjusted = romData - 128;
+            int headroom = 16;
 
-            if (color > 255)
-                color = 255;
+            adjusted = -adjusted;
+            adjusted *= ((128 - (float)headroom) / (float)range);
+            adjusted += 128;
 
-            return Color.FromArgb(color, color, color);
+            if (adjusted > 256)
+                throw new InvalidDataException(); // Too much rounding.
+
+            if (adjusted > 255)
+                adjusted = 255f; // Round down
+
+            return Color.FromArgb((byte)adjusted, (byte)adjusted, (byte)adjusted);
         }
 
         /// <summary>
@@ -209,16 +245,7 @@ namespace Pm5644RomParser
             // ROM values are 0-255 theroetically 128 appears to be zero, so start from that
             float CbFactored = Cb - 128;
             float CrFactored = Cr - 128;
-
-            // Invert polairty
-            CbFactored = -CbFactored;
-            CrFactored = -CrFactored;
-
-            // fudge factor to accomodate for the present lack of pre-processing on the chroma bitmaps
-            // ideally these should be pre-processed so they can be converted without fiddling.
-            CbFactored *= 1.45f;
-            CrFactored *= 1.45f;
-
+            
             // Standard YCbCr -> RGB conversion
             float r = Y + 1.402f * CrFactored;
             float g = Y - 0.344136f * CbFactored - 0.714136f * CrFactored;
