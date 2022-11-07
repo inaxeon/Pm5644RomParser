@@ -198,17 +198,13 @@ namespace Pm5644RomParser
             float adjusted = romData - 41; // Now 0-140
             adjusted = 140 - adjusted; // Invert
 
-            // We want 16-235 (with footroom/headroom) 0-219 adjusted
-            // 219/140 = 1.564;
+            adjusted *= 1.82f;
 
-            adjusted *= 1.56f;
-            adjusted += 16;
-
-            if ((int)adjusted > 235)
+            if ((int)adjusted > 255)
                 throw new InvalidDataException(); // Overflow.
 
-            if ((int)adjusted < 16)
-                adjusted = 16; // Clip the negative luminance in the black ref area in the centre of the circle;
+            if ((int)adjusted < 0)
+                adjusted = 0; // Clip the negative luminance in the black ref area in the centre of the circle;
 
             return Color.FromArgb((byte)adjusted, (byte)adjusted, (byte)adjusted);
         }
@@ -224,10 +220,10 @@ namespace Pm5644RomParser
             float adjusted = romData - 128;
 
             // The design amplitude of the chroma samples is not known. Therefore this is a manually
-            // adjusted figure which was observed to reduce clipping to near-zero in RGBFromPm5644YCbCr()
-            // which results in a saturation of around 75%. This matches the "Zacabeb" reproduction and
+            // adjusted figure which was observed to reduce clipping to near-zero in RGBFromYCbCr()
+            // which results in a saturation of around 75%. This matches the "Zacabeb" recreation and
             // is assumed to be what we're aiming for.
-            float headroom = 44f; 
+            float headroom = 32f; 
 
             adjusted = -adjusted;
             adjusted *= ((128 - (float)headroom) / (float)range);
@@ -259,18 +255,13 @@ namespace Pm5644RomParser
                 throw new InvalidDataException();
             }
 
-            if (Y < 16 || Y > 235)
-            {
-                // Footroom / headroom missing
-                throw new InvalidDataException();
-            }
-
-            float r = (255f / 219f) * (Y - 16) + (255f / 224f) * 1.402f * (Cr - 128f);
-            float g = (255f / 219f) * (Y - 16) - (255f / 224f) * 1.772f * (0.114f / 0.587f) * (Cb - 128) - (255f / 224f) * 1.402f * (0.299f / 0.587f) * (Cr - 128);
-            float b = (255f / 219f) * (Y - 16) + (255f / 224f) * 1.772f * (Cb - 128);
+            float r = Y + 1.402f * (Cr - 128f);
+            float g = Y - 1.772f * (0.114f / 0.587f) * (Cb - 128) - 1.402f * (0.299f / 0.587f) * (Cr - 128);
+            float b = Y + 1.772f * (Cb - 128);
 
             // Some clipping is currently necessary for the sake of accurate colours on the colourbars.
             // This only activates on transition pixels.
+
             if (r < 0)
                 r = 0;
             if (g < 0)
