@@ -63,8 +63,10 @@ namespace Pm5644RomParser
             var rYraw = (Bitmap)Image.FromFile("PM5644_RminusY_Original.png");
             var bYraw = (Bitmap)Image.FromFile("PM5644_BminusY_Original.png");
 
+            var lastLine = 574;
+
             var lumaSaturated = GenerateSaturatedLuma(lumaRaw);
-            var lumaCropped = lumaSaturated.Clone(new Rectangle(144, 41, 707, 575), lumaSaturated.PixelFormat);
+            var lumaCropped = lumaSaturated.Clone(new Rectangle(144, 41, 707, lastLine), lumaSaturated.PixelFormat);
             lumaCropped.Save("PM5644_Luma_Inverted_Saturated_Cropped.png", ImageFormat.Png);
 
             // It seems to be necessary to add a couple of pixels of fudge factor to get the chroma to align
@@ -73,12 +75,12 @@ namespace Pm5644RomParser
 
             var rySaturated = GenerateSaturatedChroma(rYraw, 65);
             var rYexpanded = new Bitmap(rySaturated, new Size(rySaturated.Width * 2, rySaturated.Height));
-            var ryCropped = rYexpanded.Clone(new Rectangle(144 + lumaXOffset, 41, 707, 575), rYraw.PixelFormat);
+            var ryCropped = rYexpanded.Clone(new Rectangle(144 + lumaXOffset, 41, 707, lastLine), rYraw.PixelFormat);
             ryCropped.Save("PM5644_RminusY_Inverted_Saturated_Expanded_Cropped.png", ImageFormat.Png);
 
             var bySaturated = GenerateSaturatedChroma(bYraw, 46);
             var bYexpanded = new Bitmap(bySaturated, new Size(bySaturated.Width * 2, bySaturated.Height));
-            var bYcropped = bYexpanded.Clone(new Rectangle(144 + lumaXOffset, 41, 707, 575), bYraw.PixelFormat);
+            var bYcropped = bYexpanded.Clone(new Rectangle(144 + lumaXOffset, 41, 707, lastLine), bYraw.PixelFormat);
             bYcropped.Save("PM5644_BminusY_Inverted_Saturated_Expanded_Cropped.png", ImageFormat.Png);
 
             var composite = GenerateComposite(lumaCropped, ryCropped, bYcropped);
@@ -113,7 +115,7 @@ namespace Pm5644RomParser
             {
                 for (int pixel = 0; pixel < Y.Width; pixel++)
                 {
-                    comp.SetPixel(pixel, line, RGBFromPm5644YCbCr(Y.GetPixel(pixel, line).R, BY.GetPixel(pixel, line).R, RY.GetPixel(pixel, line).R));
+                    comp.SetPixel(pixel, line, RGBFromYCbCr(Y.GetPixel(pixel, line).R, BY.GetPixel(pixel, line).R, RY.GetPixel(pixel, line).R));
                 }
             }
 
@@ -191,18 +193,22 @@ namespace Pm5644RomParser
         /// <returns></returns>
         static Color SaturateY(int romData)
         {
-            //Data is found in a range between 41 and 181
+            //Luma range is found in a range between 41 and 181
+
             float adjusted = romData - 41; // Now 0-140
             adjusted = 140 - adjusted; // Invert
 
             // We want 16-235 (with footroom/headroom) 0-219 adjusted
             // 219/140 = 1.564;
 
-            adjusted *= 1.57f;
+            adjusted *= 1.56f;
             adjusted += 16;
 
             if ((int)adjusted > 235)
                 throw new InvalidDataException(); // Overflow.
+
+            if ((int)adjusted < 16)
+                adjusted = 16; // Clip the negative luminance in the black ref area in the centre of the circle;
 
             return Color.FromArgb((byte)adjusted, (byte)adjusted, (byte)adjusted);
         }
@@ -216,7 +222,12 @@ namespace Pm5644RomParser
         static Color SaturateChroma(int romData, int range)
         {
             float adjusted = romData - 128;
-            int headroom = 16;
+
+            // The design amplitude of the chroma samples is not known. Therefore this is a manually
+            // adjusted figure which was observed to reduce clipping to near-zero in RGBFromPm5644YCbCr()
+            // which results in a saturation of around 75%. This matches the "Zacabeb" reproduction and
+            // is assumed to be what we're aiming for.
+            float headroom = 44f; 
 
             adjusted = -adjusted;
             adjusted *= ((128 - (float)headroom) / (float)range);
@@ -232,27 +243,34 @@ namespace Pm5644RomParser
         }
 
         /// <summary>
-        /// A very rough, approximate attempt to decode the colours in the PM5644's EPROMs.
-        /// It gets a result that *looks* OK but ideally an actual expert in this area needs
-        /// to scrutinise this and fix it because frankly I have no idea what I'm doing.
+        /// ITU-R BT.601 YCbCr -> RGB conversion
         /// </summary>
         /// <param name="Y"></param>
         /// <param name="Cb"></param>
         /// <param name="Cr"></param>
         /// <returns></returns>
-        static Color RGBFromPm5644YCbCr(byte Y, byte Cb, byte Cr)
+        static Color RGBFromYCbCr(byte Y, byte Cb, byte Cr)
         {
-            // ROM values are 0-255 theroetically 128 appears to be zero, so start from that
-            float CbFactored = Cb - 128;
-            float CrFactored = Cr - 128;
-            
-            // Standard YCbCr -> RGB conversion
-            float r = Y + 1.402f * CrFactored;
-            float g = Y - 0.344136f * CbFactored - 0.714136f * CrFactored;
-            float b = Y + 1.772f * CbFactored;
+            int chromaHeadroom = 16;
 
-            // Clip values that fall slightly out of range. This is bad but has to be done until
-            // this conversion is properly understood
+            if (Math.Abs((float)(Cb - 128)) > (128 - chromaHeadroom) || Math.Abs((float)(Cr - 128)) > (128 - chromaHeadroom))
+            {
+                // Footroom / headroom missing
+                throw new InvalidDataException();
+            }
+
+            if (Y < 16 || Y > 235)
+            {
+                // Footroom / headroom missing
+                throw new InvalidDataException();
+            }
+
+            float r = (255f / 219f) * (Y - 16) + (255f / 224f) * 1.402f * (Cr - 128f);
+            float g = (255f / 219f) * (Y - 16) - (255f / 224f) * 1.772f * (0.114f / 0.587f) * (Cb - 128) - (255f / 224f) * 1.402f * (0.299f / 0.587f) * (Cr - 128);
+            float b = (255f / 219f) * (Y - 16) + (255f / 224f) * 1.772f * (Cb - 128);
+
+            // Some clipping is currently necessary for the sake of accurate colours on the colourbars.
+            // This only activates on transition pixels.
             if (r < 0)
                 r = 0;
             if (g < 0)
@@ -315,6 +333,13 @@ namespace Pm5644RomParser
             return deviceData;
         }
 
+        /// <summary>
+        /// Uses the vector table to draw the pattern from the ROM data
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="type"></param>
+        /// <param name="saturate"></param>
+        /// <returns></returns>
         static Bitmap GenerateBitmap(Pm5644Data data, PatternType type, bool saturate)
         {
             int hpixel = 0;
