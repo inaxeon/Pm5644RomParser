@@ -201,7 +201,7 @@ namespace Pm5644RomParser
             adjusted *= 1.82f;
 
             if ((int)adjusted > 255)
-                throw new InvalidDataException(); // Overflow.
+                throw new InvalidDataException(); // Overshoot
 
             if ((int)adjusted < 0)
                 adjusted = 0; // Clip the negative luminance in the black ref area in the centre of the circle;
@@ -229,11 +229,10 @@ namespace Pm5644RomParser
             adjusted *= ((128 - (float)headroom) / (float)range);
             adjusted += 128;
 
-            if (adjusted > 256)
-                throw new InvalidDataException(); // Too much rounding.
-
-            if (adjusted > 255)
-                adjusted = 255f; // Round down
+            if (Math.Abs((float)(adjusted - 128)) > (128 - headroom))
+            {
+                throw new InvalidDataException(); // Overshoot
+            }
 
             return Color.FromArgb((byte)adjusted, (byte)adjusted, (byte)adjusted);
         }
@@ -247,14 +246,6 @@ namespace Pm5644RomParser
         /// <returns></returns>
         static Color RGBFromYCbCr(byte Y, byte Cb, byte Cr)
         {
-            int chromaHeadroom = 16;
-
-            if (Math.Abs((float)(Cb - 128)) > (128 - chromaHeadroom) || Math.Abs((float)(Cr - 128)) > (128 - chromaHeadroom))
-            {
-                // Footroom / headroom missing
-                throw new InvalidDataException();
-            }
-
             float r = Y + 1.402f * (Cr - 128f);
             float g = Y - 1.772f * (0.114f / 0.587f) * (Cb - 128) - 1.402f * (0.299f / 0.587f) * (Cr - 128);
             float b = Y + 1.772f * (Cb - 128);
