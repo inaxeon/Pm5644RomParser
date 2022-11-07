@@ -18,9 +18,7 @@ The PM5644 effectively contains three monochrome bitmaps in its EPROMs.
 2) R-Y component
 3) B-Y component
 
-This amounts to an image rougly in YCbCr format however the exact design parameters of the unit are not known thus there is quite a bit of guesswork in this project.
-
-The final result is the below however note that the understanding of how to decode the colours is presently in its infancy.
+This amounts to an image rougly in YCbCr format. This is then converted to RGB according to ITU-R BT.601 giving colours less than 1% within expected for on-screen veiwing. There is some guesswork involved in preparing the samples for conversion as the design parameters of the PM5644 aren't known.
 
 ![Composite image](https://github.com/inaxeon/Pm5644RomParser/blob/main/Pm5644RomParser/Samples/PM5644_Composite.png)
 
